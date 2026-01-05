@@ -7,7 +7,50 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+enum ProfileSource {
+  paste
+  file
+  upwork_api
+}
+
+enum SophiaTargetType {
+  profile
+  job
+  proposal
+}
+
+enum InboxProvider {
+  gmail
+  forwarded_email
+  manual
+}
+
+enum InboxStatus {
+  new
+  processed
+  ignored
+}
+
+enum InboxExtractType {
+  job_link
+  text_extract
+}
+
+enum JobSource {
+  upwork
+  inbox
+  manual
+}
+
+enum ProposalTemplateType {
+  A_short_deliverable
+  B_audit_then_build
 }
 
 // ============================================================================
@@ -28,12 +71,15 @@ model User {
   tokenExpiry   DateTime?
 
   // Relations
-  jobs          Job[]
-  proposals     Proposal[]
-  contracts     Contract[]
-  clients       Client[]
-  settings      UserSettings?
-  syncLogs      SyncLog[]
+  jobs              Job[]
+  proposals         Proposal[]
+  contracts         Contract[]
+  clients           Client[]
+  settings          UserSettings?
+  syncLogs          SyncLog[]
+  profileSnapshots  ProfileSnapshot[]
+  sophiaReports     SophiaReport[]
+  inboxMessages     InboxMessage[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -66,6 +112,113 @@ model UserSettings {
   updatedAt             DateTime @updatedAt
 
   @@map("user_settings")
+}
+
+// ============================================================================
+// Profile & Sophia Analysis
+// ============================================================================
+
+model ProfileSnapshot {
+  id                  String        @id @default(cuid())
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile data
+  source              ProfileSource
+  rawProfileText      String        @db.Text
+  intentMemoJa        String?       @db.Text
+
+  // Portfolio links
+  portfolios          Json?         // [{title, url?, descriptionJa?}]
+
+  // Strategy hints
+  firstMonthStrategy  String?       // "review_focus|balanced|rate_focus"
+  englishConfidence   Int?          // 1-5
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([userId])
+  @@map("profile_snapshots")
+}
+
+model SophiaReport {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Analysis target
+  targetType        SophiaTargetType
+  targetId          String          // references Job.id, ProfileSnapshot.id, or Proposal.id
+
+  // User feedback (from Socratic trigger)
+  userAnswerJa      String?         @db.Text
+
+  // Sophia output (MVP fixed format)
+  qMetaJson         Json            // q_meta object
+  fUltimateJson     Json            // f_ultimate object
+  artifactsJson     Json            // artifacts object
+
+  // Validation & retry
+  isValid           Boolean         @default(true)
+  rawResponse       Json?           // Store raw response for debugging
+  retryCount        Int             @default(0)
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([targetType])
+  @@index([createdAt])
+  @@map("sophia_reports")
+}
+
+// ============================================================================
+// Inbox Management
+// ============================================================================
+
+model InboxMessage {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Email metadata
+  provider          InboxProvider
+  from              String
+  subject           String
+  snippet           String?       @db.Text
+  rawBodyText       String?       @db.Text
+  receivedAt        DateTime
+
+  // Status tracking
+  status            InboxStatus   @default(new)
+
+  // Relations
+  extracts          InboxExtract[]
+  createdJobId      String?       // References Job created from this message
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([receivedAt])
+  @@map("inbox_messages")
+}
+
+model InboxExtract {
+  id                String          @id @default(cuid())
+  messageId         String
+  message           InboxMessage    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  // Extracted data
+  type              InboxExtractType
+  payloadJson       Json            // {url} for job_link, {text} for text_extract
+
+  createdAt         DateTime        @default(now())
+
+  @@index([messageId])
+  @@map("inbox_extracts")
 }
 
 // ============================================================================
@@ -104,6 +257,13 @@ model Job {
   notes             String?     @db.Text
   rating            Int?        // User's personal rating 1-5
 
+  // Source tracking
+  source            JobSource   @default(upwork)
+  createdFromInboxMessageId String?   // References InboxMessage if created from Inbox
+
+  // Analysis data (optional JSON)
+  analysisJson      Json?       // Store analysis results, scores, etc.
+
   // Relations
   proposals         Proposal[]
 
@@ -140,6 +300,10 @@ model Proposal {
 
   // Template reference
   templateName      String?
+  templateType      ProposalTemplateType?   // A_short_deliverable | B_audit_then_build
+
+  // Input data for improvement loop
+  inputJson         Json?       // Store input/generation metadata
 
   // Connects tracking
   connectsUsed      Int         @default(0)
