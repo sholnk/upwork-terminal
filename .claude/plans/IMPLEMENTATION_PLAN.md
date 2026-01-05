@@ -226,15 +226,22 @@ model SophiaReport {
   targetId      String
   userAnswerJa  String?  @db.Text
 
-  qMetaJson     Json?    // Q_META structure
-  fUltimateJson Json?    // F_ULTIMATE structure
-  socraticTrigger String? // 次に答えるべき1問
+  // MVP固定フォーマット
+  qMetaJson     Json?    // Q_META: intention, misalignment, latent_frame, premise_reflection, feedback, socratic_trigger
+  fUltimateJson Json?    // F_ULTIMATE: awareness, classification, navigation, verification, redefine, meta_check, r_update
+  artifactsJson Json?    // Artifacts: summary_ja, profile_pitch_ja, profile_pitch_en, job_analysis_ja, proposal_draft_en
+
+  // 実運用用
+  isValid       Boolean  @default(true)  // Zod検証成功フラグ
+  rawResponse   Json?    // 検証失敗時の raw response（デバッグ用）
+  retryCount    Int      @default(0)     // リトライ回数
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([userId])
   @@index([targetType, targetId])
+  @@index([createdAt])
   @@map("sophia_reports")
 }
 ```
@@ -440,21 +447,77 @@ POST   /api/proposals                         → { proposalId: string }
 ### Phase 3: Sophia分析エンジン & Report API
 **期間**: 5-6日
 
-1. `/api/sophia/analyze` エンドポイント
-   - Claude API 統合
-   - Q_META 生成（ユーザーのスキル・立場・目標の構造化）
-   - F_ULTIMATE 生成（最高の訴求・ポジション提案）
-   - SocraticTrigger 生成（次の改善質問）
-2. SophiaReport モデル保存
-3. Sophia JSON スキーマ定義（Zod）
+**Sophia出力フォーマット（MVP固定）**:
+```
+Q_META:
+  - intention: 意図の整理
+  - misalignment: ズレの可能性
+  - latent_frame: 前提フレーム
+  - premise_reflection: 前提の再確認
+  - feedback: 改善フィードバック
+  - socratic_trigger: 次に答えるべき1問 + 理由 + 回答形式
+
+F_ULTIMATE:
+  - awareness: 現状の気づき
+  - classification: 状況分類
+  - navigation: 次の一歩 + 選択肢2-5個 + 推奨
+  - verification: 前提・リスク・確認項目
+  - redefine: 再定義
+  - meta_check: メタチェック
+  - r_update: 成功指標・振り返り頻度
+
+Artifacts:
+  - summary_ja: 日本語要約
+  - profile_pitch_ja: プロフ訴求（日本語）
+  - profile_pitch_en: プロフ訴求（英語）
+  - job_analysis_ja: 案件分析（日本語）
+  - proposal_draft_en: 提案下書き（英語）
+```
+
+**実装ステップ**:
+1. **Zodスキーマ定義** (`src/lib/sophia/schemas.ts`)
+   - SophiaOutputSchema （型安全）
+   - バリデーション（必須：JSON崩壊防止）
+
+2. **プロンプト構築** (`src/lib/sophia/prompt.ts`)
+   - buildSophiaPrompt() function
+   - targetType別（profile/job/proposal）
+   - 言語制約（日本語 + 英語Artifacts）
+   - socratic_trigger は必ず1問
+
+3. **LLMProvider抽象層** (`src/lib/sophia/provider.ts`)
+   - interface LLMProvider { completeJson() }
+   - Claude API へ Anthropic SDK で接続
+   - temperature: 0.2 （確定性重視）
+
+4. **Sophiaエンジン** (`src/lib/sophia/engine.ts`)
+   - runSophia() function
+   - JSON レスポンス取得
+   - Zod で自動検証
+   - 検証失敗時: rawをログ保存 → リトライ最大2回
+
+5. **API Route** (`src/app/api/sophia/analyze/route.ts`)
+   - POST /api/sophia/analyze
+   - Request: targetType / targetId / targetText / targetTitle? / userAnswerJa?
+   - SophiaReport に保存（qMetaJson / fUltimateJson / artifactsJson）
+   - Response: sophiaReportId + 生成output
+
+**実運用ガード**:
+- Zod検証失敗時の自動リトライ（最大2回）
+- スキーマ hint 厳格化（LLMの出力ブレ対策）
+- rawレスポンスをログ保存（デバッグ用）
+- **資産化**: SophiaReportを週次で分析 → 勝ち筋パターン抽出
 
 **テスト**:
-- `/api/sophia/analyze` で JSON 生成確認
-- SophiaReport に保存確認
+- Dummy provider での動作確認
+- Claude API に切り替え
+- JSON バリデーション確認
+- 生成artifacts（pitch_ja, job_analysis_ja等）確認
 
 **成果物**:
-- Sophia分析エンジン
-- Q_META / F_ULTIMATE JSON 生成可能
+- Sophia分析エンジン完全実装
+- LLM provider 差し替え可能設計
+- Q_META / F_ULTIMATE / Artifacts 生成動作確認
 
 ---
 
@@ -591,8 +654,11 @@ upwork-terminal/
 │   │   ├── api/
 │   │   │   ├── auth/
 │   │   │   ├── inbox/         🆕
+│   │   │   │   └── ingest/route.ts
+│   │   │   │   └── messages/route.ts
 │   │   │   ├── onboarding/    🆕 Phase 7
-│   │   │   ├── sophia/        🆕
+│   │   │   ├── sophia/        🆕 Phase 3
+│   │   │   │   └── analyze/route.ts
 │   │   │   ├── jobs/          🆕
 │   │   │   └── proposals/     🆕
 │   │   │
@@ -617,10 +683,14 @@ upwork-terminal/
 │   │   │   ├── template-b-form.tsx     🆕
 │   │   │   └── proposal-preview.tsx    🆕
 │   │   │
-│   │   ├── sophia/                     🆕
-│   │   │   ├── sophia-button.tsx
+│   │   ├── sophia/                     🆕 Phase 3
+│   │   │   ├── sophia-button.tsx       (分析実行ボタン)
 │   │   │   ├── sophia-report-display.tsx
-│   │   │   └── socratic-trigger.tsx
+│   │   │   ├── sophia-q-meta.tsx
+│   │   │   ├── sophia-f-ultimate.tsx
+│   │   │   ├── sophia-artifacts.tsx
+│   │   │   ├── socratic-trigger.tsx    (次の1問表示)
+│   │   │   └── sophia-loading.tsx
 │   │   │
 │   │   └── ui/
 │   │       └── (shadcn components)
@@ -628,35 +698,45 @@ upwork-terminal/
 │   ├── lib/
 │   │   ├── prisma.ts
 │   │   ├── auth.ts
-│   │   ├── upwork-client.ts      (Phase 8で活用)
-│   │   ├── claude-api.ts         🆕 (Sophia・提案生成)
+│   │   ├── upwork-client.ts
+│   │   │
+│   │   ├── sophia/               🆕 Phase 3
+│   │   │   ├── schemas.ts        (Zod: SophiaOutputSchema)
+│   │   │   ├── prompt.ts         (buildSophiaPrompt)
+│   │   │   ├── engine.ts         (runSophia)
+│   │   │   └── provider.ts       (LLMProvider: Claude API)
+│   │   │
 │   │   ├── inbox/                🆕
-│   │   │   └── extract-urls.ts
-│   │   ├── sophia/               🆕
-│   │   │   ├── analyzer.ts
-│   │   │   └── schemas.ts
-│   │   ├── proposals/            🆕
-│   │   │   ├── templates.ts
-│   │   │   └── generator.ts
+│   │   │   └── extract-urls.ts   (URL抽出正規表現)
+│   │   │
+│   │   ├── proposals/            🆕 Phase 5
+│   │   │   ├── templates.ts      (A/Bテンプレ定義)
+│   │   │   └── generator.ts      (英語カバーレター生成)
+│   │   │
 │   │   └── utils.ts
 │   │
 │   ├── types/
 │   │   ├── inbox.ts             🆕
-│   │   ├── sophia.ts            🆕
+│   │   ├── sophia.ts            🆕 (SophiaOutput型)
 │   │   ├── proposals.ts         🆕
 │   │   └── upwork.ts
 │   │
 │   └── __tests__/
 │       ├── lib/
 │       │   ├── inbox/
-│       │   └── sophia/
+│       │   └── sophia/          🆕 Phase 3
+│       │       ├── schemas.test.ts
+│       │       ├── engine.test.ts
+│       │       └── provider.test.ts
 │       └── api/
 │
 ├── .claude/
-│   └── plans/
-│       └── IMPLEMENTATION_PLAN.md ✅ (このファイル)
+│   ├── plans/
+│   │   └── IMPLEMENTATION_PLAN.md ✅ (このファイル)
+│   └── sophia_code.md            ✅ (Sophia実装ガイド)
 │
 ├── .env.example
+├── .env.local                    (CLAUDE_API_KEY, SINGLE_USER_ID)
 ├── package.json
 ├── tsconfig.json
 └── README.md
