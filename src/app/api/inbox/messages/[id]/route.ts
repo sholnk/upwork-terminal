@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = process.env.SINGLE_USER_ID;
@@ -16,8 +16,10 @@ export async function GET(
       throw new Error("SINGLE_USER_ID not configured");
     }
 
+    const { id } = await params;
+
     const message = await prisma.inboxMessage.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         extracts: {
           select: {

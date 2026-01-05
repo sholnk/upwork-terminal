@@ -14,7 +14,7 @@ import { UpdateInboxStatusSchema } from "@/lib/schemas/inbox";
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = process.env.SINGLE_USER_ID;
@@ -22,13 +22,15 @@ export async function PATCH(
       throw new Error("SINGLE_USER_ID not configured");
     }
 
+    const { id } = await params;
+
     // Parse and validate body
     const body = await req.json();
     const data = UpdateInboxStatusSchema.parse(body);
 
     // Verify message exists and belongs to user
     const existing = await prisma.inboxMessage.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -47,7 +49,7 @@ export async function PATCH(
 
     // Update status
     const updated = await prisma.inboxMessage.update({
-      where: { id: params.id },
+      where: { id },
       data: { status: data.status },
     });
 

@@ -91,7 +91,7 @@ export async function runSophia(
         if (attempt === 2) {
           // Final attempt failed, log and return invalid result
           console.error("[Sophia] Validation failed after 2 retries", {
-            errors: parsed.error.errors,
+            errors: parsed.error.issues,
             rawResponse,
           });
 

@@ -84,7 +84,7 @@ export function InboxList({
               })}
             </span>
             {message.createdJobId && (
-              <Badge variant="success" className="text-xs">
+              <Badge variant="secondary" className="text-xs">
                 ✓ Job created
               </Badge>
             )}

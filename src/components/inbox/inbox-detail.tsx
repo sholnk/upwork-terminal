@@ -98,8 +98,8 @@ export function InboxDetail({
               message.status === "new"
                 ? "default"
                 : message.status === "processed"
-                  ? "success"
-                  : "secondary"
+                  ? "secondary"
+                  : "outline"
             }
           >
             {message.status}

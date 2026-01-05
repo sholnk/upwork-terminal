@@ -34,7 +34,7 @@ export const InboxMessageSchema = z.object({
     z.object({
       id: z.string(),
       type: z.enum(["job_link", "text_extract"]),
-      payloadJson: z.record(z.any()),
+      payloadJson: z.record(z.string(), z.any()),
     })
   ),
   createdAt: z.date(),

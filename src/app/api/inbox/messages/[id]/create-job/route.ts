@@ -23,7 +23,7 @@ import { extractUpworkJobId } from "@/lib/inbox/extract";
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = process.env.SINGLE_USER_ID;
@@ -35,9 +35,12 @@ export async function POST(
     const body = await req.json();
     const input = InboxCreateJobSchema.parse(body);
 
+    // Await params in Next.js 15+
+    const { id } = await params;
+
     // Get and verify inbox message
     const message = await prisma.inboxMessage.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!message) {
@@ -85,7 +88,7 @@ export async function POST(
 
     // Update inbox message with job ID and mark processed
     await prisma.inboxMessage.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         createdJobId: job.id,
         status: "processed",
