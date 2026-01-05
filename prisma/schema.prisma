@@ -1,0 +1,376 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// User & Authentication
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+
+  // UpWork Integration
+  upworkUserId  String?   @unique
+  upworkProfile Json?     // Store full UpWork profile
+  accessToken   String?   @db.Text
+  refreshToken  String?   @db.Text
+  tokenExpiry   DateTime?
+
+  // Relations
+  jobs          Job[]
+  proposals     Proposal[]
+  contracts     Contract[]
+  clients       Client[]
+  settings      UserSettings?
+  syncLogs      SyncLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([upworkUserId])
+  @@map("users")
+}
+
+model UserSettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile settings
+  hourlyRate            Decimal? @db.Decimal(10, 2)
+  skills                String[]
+  timezone              String?
+  availability          String?
+
+  // Notification preferences
+  emailNotifications    Boolean  @default(true)
+  jobAlerts             Boolean  @default(true)
+  proposalAlerts        Boolean  @default(true)
+
+  // Auto-sync settings
+  autoSyncJobs          Boolean  @default(true)
+  syncFrequencyMinutes  Int      @default(30)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+// ============================================================================
+// Job Research & Management
+// ============================================================================
+
+model Job {
+  id                String      @id @default(cuid())
+  upworkJobId       String      @unique
+
+  // Job details from UpWork API
+  title             String
+  description       String      @db.Text
+  category          String?
+  subcategory       String?
+  skills            String[]
+  budget            Decimal?    @db.Decimal(10, 2)
+  budgetType        String?     // "hourly" | "fixed"
+  duration          String?
+  experienceLevel   String?
+  jobType           String?     // "Contract" | "Freelance"
+
+  // Job metadata
+  postedAt          DateTime
+  url               String
+  clientInfo        Json?       // Client details from API
+
+  // User tracking
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Research tracking
+  saved             Boolean     @default(false)
+  savedAt           DateTime?
+  tags              String[]
+  notes             String?     @db.Text
+  rating            Int?        // User's personal rating 1-5
+
+  // Relations
+  proposals         Proposal[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([upworkJobId])
+  @@index([saved])
+  @@index([postedAt])
+  @@map("jobs")
+}
+
+// ============================================================================
+// Proposal Management
+// ============================================================================
+
+model Proposal {
+  id                String      @id @default(cuid())
+  upworkProposalId  String?     @unique
+
+  // Job reference
+  jobId             String
+  job               Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Proposal content
+  coverLetter       String      @db.Text
+  bidAmount         Decimal?    @db.Decimal(10, 2)
+  bidType           String?     // "hourly" | "fixed"
+  estimatedHours    Int?
+
+  // Template reference
+  templateName      String?
+
+  // Connects tracking
+  connectsUsed      Int         @default(0)
+
+  // Status tracking
+  status            String      @default("draft") // draft | submitted | interviewing | accepted | declined | withdrawn
+  submittedAt       DateTime?
+  respondedAt       DateTime?
+
+  // Client response
+  clientResponse    String?     @db.Text
+  clientViewed      Boolean     @default(false)
+  viewedAt          DateTime?
+
+  // Metrics
+  responseRate      Decimal?    @db.Decimal(5, 2)
+
+  // Relations
+  contract          Contract?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([jobId])
+  @@index([status])
+  @@index([submittedAt])
+  @@map("proposals")
+}
+
+model ProposalTemplate {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  content       String   @db.Text
+  category      String?
+  tags          String[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("proposal_templates")
+}
+
+// ============================================================================
+// Contract & Progress Management
+// ============================================================================
+
+model Contract {
+  id                String      @id @default(cuid())
+  upworkContractId  String      @unique
+
+  // Proposal reference
+  proposalId        String      @unique
+  proposal          Proposal    @relation(fields: [proposalId], references: [id])
+
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Client reference
+  clientId          String
+  client            Client      @relation(fields: [clientId], references: [id])
+
+  // Contract details
+  title             String
+  description       String?     @db.Text
+  contractType      String      // "hourly" | "fixed"
+  rate              Decimal?    @db.Decimal(10, 2)
+  weeklyLimit       Int?        // For hourly contracts
+  totalAmount       Decimal?    @db.Decimal(10, 2)
+
+  // Status
+  status            String      @default("active") // active | paused | completed | cancelled
+  startDate         DateTime
+  endDate           DateTime?
+
+  // Financial tracking
+  totalEarned       Decimal     @default(0) @db.Decimal(10, 2)
+  totalHours        Decimal     @default(0) @db.Decimal(10, 2)
+
+  // Relations
+  milestones        Milestone[]
+  timesheets        Timesheet[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([status])
+  @@index([startDate])
+  @@map("contracts")
+}
+
+model Milestone {
+  id                String      @id @default(cuid())
+  contractId        String
+  contract          Contract    @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  upworkMilestoneId String?     @unique
+
+  title             String
+  description       String?     @db.Text
+  amount            Decimal     @db.Decimal(10, 2)
+  dueDate           DateTime?
+
+  status            String      @default("pending") // pending | in_progress | submitted | approved | paid
+
+  submittedAt       DateTime?
+  approvedAt        DateTime?
+  paidAt            DateTime?
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([contractId])
+  @@index([status])
+  @@map("milestones")
+}
+
+model Timesheet {
+  id            String      @id @default(cuid())
+  contractId    String
+  contract      Contract    @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  date          DateTime    @db.Date
+  hours         Decimal     @db.Decimal(5, 2)
+  description   String?     @db.Text
+  memo          String?
+
+  // Work diary tracking
+  manualTime    Boolean     @default(false)
+  trackedTime   Decimal?    @db.Decimal(5, 2)
+
+  status        String      @default("pending") // pending | approved | disputed
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([contractId, date])
+  @@index([contractId])
+  @@index([date])
+  @@map("timesheets")
+}
+
+// ============================================================================
+// Client Management
+// ============================================================================
+
+model Client {
+  id                String      @id @default(cuid())
+  upworkClientId    String      @unique
+
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Client details
+  name              String
+  company           String?
+  location          String?
+  timezone          String?
+
+  // Client metrics from UpWork
+  totalSpent        Decimal?    @db.Decimal(12, 2)
+  totalHires        Int?
+  paymentVerified   Boolean     @default(false)
+  rating            Decimal?    @db.Decimal(3, 2)
+  reviewsCount      Int?
+
+  // User tracking
+  tags              String[]
+  notes             String?     @db.Text
+  favorited         Boolean     @default(false)
+
+  // Communication tracking
+  lastContactAt     DateTime?
+
+  // Relations
+  contracts         Contract[]
+  communications    ClientCommunication[]
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([upworkClientId])
+  @@map("clients")
+}
+
+model ClientCommunication {
+  id            String      @id @default(cuid())
+  clientId      String
+  client        Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  type          String      // "message" | "call" | "meeting" | "note"
+  subject       String?
+  content       String      @db.Text
+
+  communicatedAt DateTime   @default(now())
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([clientId])
+  @@index([communicatedAt])
+  @@map("client_communications")
+}
+
+// ============================================================================
+// Sync & Integration Tracking
+// ============================================================================
+
+model SyncLog {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  syncType      String      // "jobs" | "proposals" | "contracts" | "profile"
+  status        String      // "success" | "partial" | "failed"
+
+  recordsSynced Int         @default(0)
+  errors        Json?
+
+  startedAt     DateTime
+  completedAt   DateTime?
+
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([syncType])
+  @@index([startedAt])
+  @@map("sync_logs")
+}
