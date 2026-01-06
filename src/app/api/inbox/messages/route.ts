@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { InboxListQuerySchema } from "@/lib/schemas/inbox";
 import type { InboxStatus } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/inbox/messages
  *

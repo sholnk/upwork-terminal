@@ -5,6 +5,8 @@ import { SophiaAnalyzeRequestSchema } from "@/lib/sophia/schemas";
 import { provider } from "@/lib/sophia/provider";
 import type { SophiaTargetType } from "@/lib/sophia/prompt";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/sophia/analyze
  *

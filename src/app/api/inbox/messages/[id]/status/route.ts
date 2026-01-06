@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { UpdateInboxStatusSchema } from "@/lib/schemas/inbox";
 
+export const dynamic = "force-dynamic";
+
 /**
  * PATCH /api/inbox/messages/:id/status
  *

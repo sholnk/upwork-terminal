@@ -1,18 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 
-// Avoid instantiating Prisma Client in every request
-let prisma: PrismaClient;
+// Lazy-load Prisma Client to avoid connection issues during build
+let prismaInstance: PrismaClient | null = null;
 
-if (process.env.NODE_ENV === "production") {
-  prisma = new PrismaClient();
-} else {
-  let globalForPrisma = global as typeof globalThis & {
-    prisma: PrismaClient;
-  };
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient();
+function getPrisma(): PrismaClient {
+  if (!prismaInstance) {
+    // Only initialize if DATABASE_URL is available
+    if (!process.env.DATABASE_URL && process.env.NODE_ENV === "production") {
+      throw new Error(
+        "DATABASE_URL is not set. Please configure your database connection."
+      );
+    }
+    prismaInstance = new PrismaClient();
   }
-  prisma = globalForPrisma.prisma;
+  return prismaInstance;
 }
 
-export { prisma };
+// For compatibility, export a lazy-loading proxy
+export const prisma = new Proxy({} as PrismaClient, {
+  get: (target, prop) => {
+    return Reflect.get(getPrisma(), prop);
+  },
+});

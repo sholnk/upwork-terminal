@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { JobAnalyzeShell } from "@/components/jobs/job-analyze-shell";
 
+export const dynamic = "force-dynamic";
+
 interface JobAnalyzePageProps {
   params: {
     id: string;

@@ -41,13 +41,15 @@ export const ProposalInputSchema = z.object({
   summaryJa: z.string().optional(),
   approachJa: z.string().optional(),
   timelineJa: z.string().optional(),
+  rateJa: z.string().optional().describe("Rate in JPY or description for Type A"),
   // Type B fields
   auditScopeJa: z.string().optional(),
   auditTimelineJa: z.string().optional(),
+  auditRate: z.string().optional().describe("Audit phase cost"),
   buildScopeJa: z.string().optional(),
   buildTimelineJa: z.string().optional(),
-  // Common
-  rateJa: z.string().optional().describe("Rate in JPY or description"),
+  buildRate: z.string().optional().describe("Build phase cost"),
+  totalRate: z.string().optional().describe("Total project cost"),
 });
 
 /**

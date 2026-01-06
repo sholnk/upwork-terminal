@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { InboxCreateJobSchema } from "@/lib/schemas/inbox";
 import { extractUpworkJobId } from "@/lib/inbox/extract";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/inbox/messages/:id/create-job
  *

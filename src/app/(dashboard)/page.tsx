@@ -12,6 +12,8 @@ import {
   Clock,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "ダッシュボード | UpWork Terminal",
   description: "Manage your freelance work on UpWork",

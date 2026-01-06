@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { InboxShell } from "@/components/inbox/inbox-shell";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Inbox | UpWork Terminal",
   description: "UpWork notifications and job leads",

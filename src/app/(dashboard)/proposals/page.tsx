@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "提案 | UpWork Terminal",
   description: "Your proposals and draft submissions",
@@ -153,7 +155,7 @@ export default async function ProposalsPage() {
                   <div className="flex items-center gap-3">
                     {proposal.bidAmount && (
                       <p className="text-sm font-semibold text-gray-900">
-                        ${proposal.bidAmount}
+                        ${proposal.bidAmount.toString()}
                       </p>
                     )}
                     <Badge variant={getStatusColor(proposal.status)}>
