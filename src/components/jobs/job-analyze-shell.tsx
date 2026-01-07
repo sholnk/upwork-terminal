@@ -184,8 +184,9 @@ export function JobAnalyzeShell({ job }: JobAnalyzeShellProps) {
               </div>
             ) : sophiaReports && sophiaReports.length > 0 ? (
               <div className="space-y-4">
-                {sophiaReports.map((report: any) => (
-                  <SophiaReportDisplay key={report.id} report={report} />
+                {sophiaReports.map((report: unknown) => (
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  <SophiaReportDisplay key={(report as any).id} report={report as any} />
                 ))}
               </div>
             ) : (

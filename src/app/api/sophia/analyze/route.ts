@@ -54,14 +54,13 @@ export async function POST(req: NextRequest) {
     const report = await prisma.sophiaReport.create({
       data: {
         userId,
-        targetType: request.targetType as any,
+        targetType: request.targetType as SophiaTargetType,
         targetId: request.targetId,
         userAnswerJa: request.userAnswerJa || null,
         qMetaJson: result.output.q_meta,
         fUltimateJson: result.output.f_ultimate,
         artifactsJson: result.output.artifacts,
         isValid: result.isValid,
-        rawResponse: result.rawResponse as any,
         retryCount: result.retryCount,
       },
     });

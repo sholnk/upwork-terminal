@@ -14,6 +14,9 @@ import {
   Settings,
   Menu,
   X,
+  User,
+  Plus,
+  Download,
 } from "lucide-react";
 
 /**
@@ -38,6 +41,16 @@ export function MainNav() {
       icon: Search,
     },
     {
+      label: "新規ジョブ追加",
+      href: "/jobs/new",
+      icon: Plus,
+    },
+    {
+      label: "ジョブをインポート",
+      href: "/jobs/import",
+      icon: Download,
+    },
+    {
       label: "提案管理",
       href: "/proposals",
       icon: FileText,
@@ -51,6 +64,11 @@ export function MainNav() {
       label: "クライアント",
       href: "/clients",
       icon: Users,
+    },
+    {
+      label: "プロフィール",
+      href: "/profile",
+      icon: User,
     },
     {
       label: "設定",
@@ -125,6 +143,12 @@ export function MainNav() {
 
         {/* Footer */}
         <div className="absolute bottom-6 left-6 right-6 border-t border-gray-700 pt-6">
+          <Link
+            href="/manual"
+            className="flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white mb-3 transition-colors"
+          >
+            <span className="underline">操作マニュアル</span>
+          </Link>
           <p className="text-xs text-gray-500 text-center">
             v0.1.0 • Beta
           </p>

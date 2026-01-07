@@ -59,6 +59,7 @@ export function InboxShell() {
 
   // Clear selection when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedId(null);
   }, [statusFilter, searchQuery]);
 

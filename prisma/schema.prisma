@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================================================
@@ -94,6 +95,9 @@ model UserSettings {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Profile settings
+  title                 String?
+  overview              String?  @db.Text
+  location              String?
   hourlyRate            Decimal? @db.Decimal(10, 2)
   skills                String[]
   timezone              String?

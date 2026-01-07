@@ -1,20 +1,64 @@
 import { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import { isTokenExpired, isOAuthConfigured } from "@/lib/upwork/oauth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { UpworkConnectionCard } from "@/components/settings/upwork-connection-card";
 
 export const metadata: Metadata = {
   title: "設定 | UpWork Terminal",
   description: "Application settings and preferences",
 };
 
+export const dynamic = "force-dynamic";
+
+async function getConnectionStatus() {
+  const userId = process.env.SINGLE_USER_ID;
+
+  if (!userId) {
+    return { isConnected: false, oauthConfigured: false };
+  }
+
+  const oauthConfigured = isOAuthConfigured();
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      accessToken: true,
+      tokenExpiry: true,
+      upworkUserId: true,
+    },
+  });
+
+  const isConnected = !!(user?.accessToken && !isTokenExpired(user.tokenExpiry));
+
+
+  const userSettings = await prisma.userSettings.findUnique({
+    where: { userId: userId },
+  });
+
+  return {
+    isConnected,
+    oauthConfigured,
+    upworkUserId: user?.upworkUserId,
+    tokenExpiry: user?.tokenExpiry,
+    userSettings,
+  };
+}
+
 /**
  * Settings Page
  *
  * ユーザー設定・自動同期等の管理
  */
-export default function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ success?: string; error?: string }>;
+}) {
+  const { isConnected, oauthConfigured, tokenExpiry, userSettings } = await getConnectionStatus();
+  const params = await searchParams;
+
   return (
     <div className="space-y-6 p-6 lg:ml-0">
       <div>
@@ -24,6 +68,25 @@ export default function SettingsPage() {
         </p>
       </div>
 
+      {/* Success/Error Messages */}
+      {params.success && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+          {params.success}
+        </div>
+      )}
+      {params.error && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+          {params.error}
+        </div>
+      )}
+
+      {/* UpWork Connection */}
+      <UpworkConnectionCard
+        isConnected={isConnected}
+        oauthConfigured={oauthConfigured}
+        tokenExpiry={tokenExpiry?.toISOString()}
+      />
+
       {/* Sync Settings */}
       <Card>
         <CardHeader>
@@ -31,13 +94,14 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>同期間隔</Label>
+            <label className="text-sm font-medium">同期間隔</label>
             <div className="flex gap-2 mt-2">
-              <Input
+              <input
                 type="number"
                 placeholder="30"
-                className="w-24"
+                className="w-24 px-3 py-2 border rounded-md"
                 defaultValue="30"
+                disabled={!isConnected}
               />
               <span className="flex items-center text-sm text-gray-600">
                 分ごと
@@ -48,39 +112,12 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <Button variant="outline" className="w-full">
+          <button
+            className="w-full px-4 py-2 border rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!isConnected}
+          >
             今すぐ同期
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Profile Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">プロフィール設定</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>時給（参考値）</Label>
-            <Input
-              type="number"
-              placeholder="50"
-              className="mt-2"
-            />
-          </div>
-
-          <div>
-            <Label>主要スキル</Label>
-            <Input
-              type="text"
-              placeholder="JavaScript, React, Node.js"
-              className="mt-2"
-            />
-          </div>
-
-          <Button variant="outline" className="w-full">
-            保存
-          </Button>
+          </button>
         </CardContent>
       </Card>
 
@@ -112,9 +149,9 @@ export default function SettingsPage() {
             />
           </div>
 
-          <Button variant="outline" className="w-full">
+          <button className="w-full px-4 py-2 border rounded-md text-sm font-medium hover:bg-gray-50">
             保存
-          </Button>
+          </button>
         </CardContent>
       </Card>
 
@@ -130,7 +167,9 @@ export default function SettingsPage() {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">ステータス</span>
-            <span className="font-medium text-green-600">稼働中</span>
+            <Badge variant={isConnected ? "default" : "secondary"}>
+              {isConnected ? "UpWork連携中" : "未連携"}
+            </Badge>
           </div>
         </CardContent>
       </Card>

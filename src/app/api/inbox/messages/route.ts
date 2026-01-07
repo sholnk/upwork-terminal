@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { InboxListQuerySchema } from "@/lib/schemas/inbox";
-import type { InboxStatus } from "@prisma/client";
+import type { InboxStatus, Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Build where clause
-    const where: any = { userId };
+    const where: Prisma.InboxMessageWhereInput = { userId };
 
     if (query.status) {
       where.status = query.status as InboxStatus;

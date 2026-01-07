@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { NewProposalDialog } from "@/components/proposal/new-proposal-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -81,11 +82,14 @@ export default async function ProposalsPage() {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">提案管理</h1>
-        <p className="text-gray-600 mt-2">
-          {stats.total}件の提案を管理中
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">提案管理</h1>
+          <p className="text-gray-600 mt-2">
+            {stats.total}件の提案を管理中
+          </p>
+        </div>
+        <NewProposalDialog />
       </div>
 
       {/* Stats Cards */}

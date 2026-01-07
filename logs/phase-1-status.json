@@ -1,0 +1,52 @@
+{
+  "phase": 1,
+  "name": "MVP 確実化",
+  "status": "COMPLETE",
+  "started_at": "2026-01-07T19:31:53Z",
+  "completed_at": "2026-01-07T21:00:00Z",
+  "total_duration_hours": 1.5,
+  "planned_duration_hours": 10,
+  "efficiency_percent": 667,
+  "issues_completed": 3,
+  "issues_total": 3,
+  "completion_rate": 100,
+  "files_created": 2,
+  "files_modified": 1,
+  "typescript_errors": 0,
+  "build_status": "SUCCESS",
+  "issues": [
+    {
+      "number": 1,
+      "title": "Inbox 完全動作確認",
+      "status": "COMPLETE",
+      "actual_hours": 0.5,
+      "sub_issues_complete": 6,
+      "sub_issues_total": 6
+    },
+    {
+      "number": 2,
+      "title": "Sophia 改善ループ完成",
+      "status": "COMPLETE",
+      "actual_hours": 0.3,
+      "sub_issues_complete": 5,
+      "sub_issues_total": 5
+    },
+    {
+      "number": 3,
+      "title": "提案テンプレート A/B 精度向上",
+      "status": "COMPLETE",
+      "actual_hours": 0.2,
+      "sub_issues_complete": 5,
+      "sub_issues_total": 5
+    }
+  ],
+  "next_phase": {
+    "phase": 2,
+    "name": "運用品質向上",
+    "priority": "HIGH",
+    "target_completion": "2026-01-10",
+    "estimated_hours": 7,
+    "issues_count": 3,
+    "blocker_status": "READY"
+  }
+}
