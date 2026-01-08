@@ -58,9 +58,9 @@ jobs:
           # Create .vercel directory with project.json
           mkdir -p .vercel
           echo '{"projectId":"'"$VERCEL_PROJECT_ID"'","orgId":"'"$VERCEL_ORG_ID"'"}' > .vercel/project.json
-          # Build and deploy
-          vercel build --prod --token=$VERCEL_TOKEN
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          cat .vercel/project.json
+          # Deploy directly (Vercel handles build)
+          vercel --prod --token=$VERCEL_TOKEN --yes
 
   monitor:
     runs-on: ubuntu-latest
