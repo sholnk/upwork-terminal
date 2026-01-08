@@ -54,13 +54,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-        run: |
-          # Create .vercel directory with project.json
-          mkdir -p .vercel
-          echo '{"projectId":"'"$VERCEL_PROJECT_ID"'","orgId":"'"$VERCEL_ORG_ID"'"}' > .vercel/project.json
-          cat .vercel/project.json
-          # Deploy directly (Vercel handles build)
-          vercel --prod --token=$VERCEL_TOKEN --yes
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
 
   monitor:
     runs-on: ubuntu-latest
