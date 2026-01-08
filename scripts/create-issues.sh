@@ -5,7 +5,7 @@
 
 set -e
 
-export GITHUB_TOKEN="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"
+# GITHUB_TOKEN は環境変数 (.env) から読み込まれます
 
 echo "📌 Creating GitHub Issues..."
 echo "Repository: sholnk/upwork-terminal"
