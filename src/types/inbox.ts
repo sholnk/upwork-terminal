@@ -19,7 +19,11 @@ export interface InboxMessageItem {
 export interface InboxExtract {
   id: string;
   type: "job_link" | "text_extract";
-  payloadJson: Record<string, unknown>;
+  payloadJson: {
+    url?: string;
+    text?: string;
+    [key: string]: unknown;
+  };
 }
 
 export interface InboxMessageDetail extends InboxMessageItem {

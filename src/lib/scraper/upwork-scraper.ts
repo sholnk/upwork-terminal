@@ -107,46 +107,53 @@ async function extractJobData(
 ): Promise<ScrapedJobDetails> {
   // Use page.evaluate to run code in browser context
   const data = await page.evaluate(() => {
-    const result: Record<string, unknown> = {};
-
     // Title
     const titleEl = document.querySelector('[data-test="job-title"]');
-    result.title = titleEl?.textContent?.trim() || "";
+    const title = titleEl?.textContent?.trim() || "";
 
     // Description
     const descEl = document.querySelector('[data-test="job-description"]');
-    result.description = descEl?.textContent?.trim() || "";
+    const description = descEl?.textContent?.trim() || "";
 
     // Skills
     const skillEls = document.querySelectorAll('[data-test="skill-tag"]');
-    result.skills = Array.from(skillEls)
+    const skills = Array.from(skillEls)
       .map((el) => el.textContent?.trim())
-      .filter(Boolean);
+      .filter((s): s is string => !!s);
 
     // Budget
     const budgetEl = document.querySelector('[data-test="job-budget"]');
     const budgetText = budgetEl?.textContent || "";
-    result.budgetText = budgetText;
 
     // Experience level
     const expEl = document.querySelector('[data-test="experience-level"]');
-    result.experienceLevel = expEl?.textContent?.trim() || "";
+    const experienceLevel = expEl?.textContent?.trim() || "";
 
     // Duration
     const durEl = document.querySelector('[data-test="job-duration"]');
-    result.duration = durEl?.textContent?.trim() || "";
+    const duration = durEl?.textContent?.trim() || "";
 
     // Client info
     const clientNameEl = document.querySelector('[data-test="client-name"]');
     const clientLocEl = document.querySelector('[data-test="client-location"]');
-    result.clientName = clientNameEl?.textContent?.trim() || "";
-    result.clientLocation = clientLocEl?.textContent?.trim() || "";
+    const clientName = clientNameEl?.textContent?.trim() || "";
+    const clientLocation = clientLocEl?.textContent?.trim() || "";
 
     // Posted time
     const timeEl = document.querySelector('time');
-    result.postedTime = timeEl?.getAttribute("datetime") || new Date().toISOString();
+    const postedTime = timeEl?.getAttribute("datetime") || new Date().toISOString();
 
-    return result;
+    return {
+      title,
+      description,
+      skills,
+      budgetText,
+      experienceLevel,
+      duration,
+      clientName,
+      clientLocation,
+      postedTime,
+    };
   });
 
   // Parse budget

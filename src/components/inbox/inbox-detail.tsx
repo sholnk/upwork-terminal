@@ -163,7 +163,7 @@ export function InboxDetail({
                           size="sm"
                           variant="ghost"
                           onClick={() =>
-                            handleCreateJob(extract.payloadJson.url)
+                            handleCreateJob(String(extract.payloadJson.url || ""))
                           }
                           disabled={creatingJob || !!message.createdJobId}
                           className="flex-shrink-0"
@@ -179,26 +179,26 @@ export function InboxDetail({
               {/* Other Extracts */}
               {message.extracts.filter((e) => e.type !== "job_link").length >
                 0 && (
-                <div>
-                  <p className="text-xs font-medium text-gray-700 mb-2">
-                    Text Extracts
-                  </p>
-                  <div className="space-y-1">
-                    {message.extracts
-                      .filter((e) => e.type !== "job_link")
-                      .map((extract) => (
-                        <div
-                          key={extract.id}
-                          className="text-xs bg-gray-50 p-2 rounded border border-gray-200 text-gray-700"
-                        >
-                          {extract.payloadJson.text ||
-                            extract.payloadJson.url ||
-                            JSON.stringify(extract.payloadJson)}
-                        </div>
-                      ))}
+                  <div>
+                    <p className="text-xs font-medium text-gray-700 mb-2">
+                      Text Extracts
+                    </p>
+                    <div className="space-y-1">
+                      {message.extracts
+                        .filter((e) => e.type !== "job_link")
+                        .map((extract) => (
+                          <div
+                            key={extract.id}
+                            className="text-xs bg-gray-50 p-2 rounded border border-gray-200 text-gray-700"
+                          >
+                            {extract.payloadJson.text ||
+                              extract.payloadJson.url ||
+                              JSON.stringify(extract.payloadJson)}
+                          </div>
+                        ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         )}

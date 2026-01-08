@@ -83,7 +83,13 @@ export async function executeGraphQL<T>(
 
         if (query.includes("updateTalentProfile")) {
             console.log("Mock Mode: Simulating profile update", variables);
-            const input = (variables as Record<string, unknown>)?.input as Record<string, unknown> || {};
+            const varsRecord = variables as Record<string, unknown> | undefined;
+            const inputRaw = varsRecord?.input as Record<string, unknown> | undefined;
+            const input = {
+                title: inputRaw?.title as string | undefined,
+                description: inputRaw?.description as string | undefined,
+                hourlyRate: inputRaw?.hourlyRate as { amount?: number; currencyCode?: string } | undefined,
+            };
 
             return {
                 updateTalentProfile: {

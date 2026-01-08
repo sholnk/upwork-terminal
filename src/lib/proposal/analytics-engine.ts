@@ -41,6 +41,20 @@ export interface ProposalAnalytics {
 }
 
 /**
+ * Proposal input type for analytics
+ */
+interface ProposalInput {
+  status?: string;
+  job?: {
+    skills?: string[];
+    budget?: number;
+    clientInfo?: {
+      rating?: number;
+    };
+  };
+}
+
+/**
  * Calculate proposal win rate
  */
 function calculateWinRate(accepted: number, total: number): number {
@@ -61,7 +75,7 @@ function getBudgetRange(budget: number): string {
 /**
  * Analyze proposal data
  */
-export function analyzeProposals(proposals: unknown[]): ProposalAnalytics {
+export function analyzeProposals(proposals: ProposalInput[]): ProposalAnalytics {
   const skillMap = new Map<string, { count: number; won: number }>();
   const budgetMap = new Map<string, { count: number; won: number }>();
   const ratingMap = new Map<number, { count: number; won: number }>();
