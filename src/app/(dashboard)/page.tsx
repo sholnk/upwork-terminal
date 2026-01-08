@@ -27,7 +27,19 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const userId = process.env.SINGLE_USER_ID;
   if (!userId) {
-    redirect("/");
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-8 bg-white rounded-lg shadow-md max-w-md w-full">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Configuration Error</h1>
+          <p className="text-gray-700">
+            The environment variable <code>SINGLE_USER_ID</code> is not set.
+          </p>
+          <p className="text-gray-600 mt-2 text-sm">
+            Please configure this in your Vercel Project Settings.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Fetch data for dashboard
