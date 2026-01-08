@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { runSophia } from "@/lib/sophia/engine";
 import { SophiaAnalyzeRequestSchema } from "@/lib/sophia/schemas";
-import { provider } from "@/lib/sophia/provider";
+import { getProvider } from "@/lib/sophia/provider";
 import type { SophiaTargetType } from "@/lib/sophia/prompt";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     // Run Sophia analysis
     const result = await runSophia({
-      provider,
+      provider: getProvider(),
       targetType: request.targetType as SophiaTargetType,
       targetTitle: request.targetTitle,
       targetText: request.targetText,

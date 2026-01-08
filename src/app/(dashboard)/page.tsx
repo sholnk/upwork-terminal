@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default async function DashboardPage() {
   const userId = process.env.SINGLE_USER_ID;
   if (!userId) {
-    // redirect("/");
+
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
         <div className="p-8 bg-white rounded-lg shadow-md max-w-md w-full">

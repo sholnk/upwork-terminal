@@ -61,8 +61,8 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          vercel build --prod --token=$VERCEL_TOKEN
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          rm -rf .vercel
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
 
   monitor:
     runs-on: ubuntu-latest
