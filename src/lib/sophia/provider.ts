@@ -95,5 +95,16 @@ class ClaudeProvider implements LLMProvider {
   }
 }
 
-// Export singleton instance
-export const provider = new ClaudeProvider();
+// Lazy singleton - only instantiates when first accessed
+let _provider: ClaudeProvider | null = null;
+
+export function getProvider(): LLMProvider {
+  if (!_provider) {
+    _provider = new ClaudeProvider();
+  }
+  return _provider;
+}
+
+// For backward compatibility (but will throw at import time if used directly)
+// export const provider = new ClaudeProvider();
+
