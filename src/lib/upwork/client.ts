@@ -42,6 +42,7 @@ export async function executeGraphQL<T>(
 
         // Dynamic import to avoid circular dependencies if any
         // or just strict check
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { MOCK_USER_PROFILE } = require("./mock-data");
 
         // Simple mock response logic based on query content
@@ -82,7 +83,7 @@ export async function executeGraphQL<T>(
 
         if (query.includes("updateTalentProfile")) {
             console.log("Mock Mode: Simulating profile update", variables);
-            const input = (variables as any)?.input || {};
+            const input = (variables as Record<string, unknown>)?.input as Record<string, unknown> || {};
 
             return {
                 updateTalentProfile: {
