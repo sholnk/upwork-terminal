@@ -47,7 +47,13 @@ jobs:
           node-version: '20'
 
       - name: Install Vercel CLI
-        run: npm i -g vercel
+        run: npm install --global vercel@latest
+
+      - name: Remove .vercel directory
+        run: rm -rf .vercel
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
         env:
@@ -55,7 +61,6 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
           vercel build --prod --token=$VERCEL_TOKEN
           vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
 
