@@ -1,0 +1,64 @@
+=============================================================================
+次回セッション自動再開ファイル
+=============================================================================
+
+【ユーザーへの指示】
+次回 Claude Code を開いたら、このテキストをすべてコピーして Claude に以下のように送信してください：
+
+---
+
+以下のファイルから自動再開指示を読み込んでデプロイを進めてください：
+/c/Users/SH/dev/wp/upwork-terminal/SESSION_RESUME_INSTRUCTIONS.md
+
+実行手順：
+1. ユーザーから必要なトークンを取得（以下を取得するよう指示）
+   - GitHub Personal Access Token
+   - Vercel Personal Access Token
+   - Vercel Project ID
+   - Vercel Org ID
+
+2. GitHub Secrets に自動設定
+
+3. git push origin master を実行
+
+4. GitHub Actions のデプロイを監視
+
+5. 本番環境の動作確認
+
+---
+
+【必要な情報の取得方法】
+
+1. GitHub Personal Access Token:
+   https://github.com/settings/tokens
+   → "Generate new token (classic)"
+   → Scopes: repo (full)
+
+2. Vercel Token:
+   https://vercel.com/account/tokens
+
+3. Vercel Project ID:
+   https://vercel.com/dashboard → Settings → Project ID
+
+4. Vercel Org ID:
+   https://vercel.com/account/settings
+
+【現在の進捗】
+
+✅ コード実装: 15/15 Issues (100%)
+✅ テスト: 5/5 成功
+✅ ビルド: 成功 (0 errors)
+✅ Git: コミット完了
+⏳ デプロイ: 実行待機中
+
+【重要なファイル】
+
+- SESSION_RESUME_INSTRUCTIONS.md (詳細手順)
+- DEPLOYMENT_STATUS.md (状態スナップショット)
+- auto_deploy.sh (自動実行スクリプト)
+
+【クイックコマンド】
+
+bash /c/Users/SH/dev/wp/upwork-terminal/auto_deploy.sh
+
+=============================================================================
