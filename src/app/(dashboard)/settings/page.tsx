@@ -56,7 +56,7 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ success?: string; error?: string }>;
 }) {
-  const { isConnected, oauthConfigured, tokenExpiry, userSettings } = await getConnectionStatus();
+  const { isConnected, oauthConfigured, tokenExpiry } = await getConnectionStatus();
   const params = await searchParams;
 
   return (

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { InboxIngestSchema } from "@/lib/schemas/inbox";
-import { extractEmailContent, isUpworkJobUrl } from "@/lib/inbox/extract";
+import { extractEmailContent } from "@/lib/inbox/extract";
 
 export const dynamic = "force-dynamic";
 

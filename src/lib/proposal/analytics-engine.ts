@@ -61,7 +61,7 @@ function getBudgetRange(budget: number): string {
 /**
  * Analyze proposal data
  */
-export function analyzeProposals(proposals: any[]): ProposalAnalytics {
+export function analyzeProposals(proposals: unknown[]): ProposalAnalytics {
   const skillMap = new Map<string, { count: number; won: number }>();
   const budgetMap = new Map<string, { count: number; won: number }>();
   const ratingMap = new Map<number, { count: number; won: number }>();

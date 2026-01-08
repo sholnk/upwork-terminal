@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Decimal } from "@prisma/client/runtime/library";
 import { prisma } from "@/lib/prisma";
-import { CreateJobSchema, UpdateJobSchema } from "@/lib/schemas/job";
+import { CreateJobSchema } from "@/lib/schemas/job";
 import { extractUpworkJobId } from "@/lib/upwork/url-parser";
 import type { Prisma } from "@prisma/client";
 
@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
     // Get search/filter params
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get("search");
-    const status = searchParams.get("status");
     const limit = parseInt(searchParams.get("limit") || "50");
     const offset = parseInt(searchParams.get("offset") || "0");
 

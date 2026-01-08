@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 
 export const metadata = {
@@ -33,12 +34,14 @@ export default async function ManualPage() {
             ">
                 <ReactMarkdown
                     components={{
-                        img: ({ node, ...props }) => (
+                        img: ({ ...props }) => (
                             <div className="my-10">
-                                <img
+                                <Image
                                     {...props}
+                                    width={800}
+                                    height={600}
                                     className="rounded-lg shadow-lg border border-gray-200 w-full max-w-4xl mx-auto"
-                                    alt={props.alt}
+                                    alt={props.alt || "Image"}
                                 />
                                 {props.alt && (
                                     <p className="text-center text-sm text-gray-500 mt-3 italic">

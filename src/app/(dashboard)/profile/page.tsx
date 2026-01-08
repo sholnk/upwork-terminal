@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { isTokenExpired, isOAuthConfigured } from "@/lib/upwork/oauth";
+import { isTokenExpired } from "@/lib/upwork/oauth";
 import { ProfileView } from "@/components/profile/profile-view";
 
 export const metadata: Metadata = {

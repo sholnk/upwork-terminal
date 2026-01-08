@@ -143,7 +143,7 @@ export default function JobImportPage() {
       const data = await response.json();
 
       router.push(`/jobs/${data.jobId}/analyze`);
-    } catch (error) {
+    } catch {
       alert("Failed to import job");
     } finally {
       setLoading(false);

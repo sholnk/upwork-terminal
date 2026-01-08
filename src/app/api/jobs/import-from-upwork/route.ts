@@ -23,8 +23,6 @@ const ImportJobSchema = z.object({
     .optional(),
 });
 
-type ImportJobRequest = z.infer<typeof ImportJobSchema>;
-
 export async function POST(request: NextRequest) {
   try {
     // Validate request

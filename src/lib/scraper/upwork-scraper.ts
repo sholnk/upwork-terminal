@@ -107,7 +107,7 @@ async function extractJobData(
 ): Promise<ScrapedJobDetails> {
   // Use page.evaluate to run code in browser context
   const data = await page.evaluate(() => {
-    const result: any = {};
+    const result: Record<string, unknown> = {};
 
     // Title
     const titleEl = document.querySelector('[data-test="job-title"]');
